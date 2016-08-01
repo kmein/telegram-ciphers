@@ -7,6 +7,10 @@ resolver: lts-6.10
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
+- location:
+    git: https://github.com/kmein/ciphers
+    commit: 3eb0dc318cc8adfad23069ba7adf317971e49cfb
+  extra-dep: true
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps: []
 
