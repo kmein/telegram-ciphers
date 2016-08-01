@@ -51,7 +51,7 @@ run previousId =
 
 pollMessages :: Token -> Manager -> IO (Maybe UpdatesResponse)
 pollMessages token manager =
-    eitherToMaybe <$> getUpdates token Nothing Nothing (Just 2) manager
+    eitherToMaybe <$> getUpdates token Nothing Nothing (Just 5) manager
 
 eitherToMaybe :: Either a b -> Maybe b
 eitherToMaybe = const Nothing `either` Just
