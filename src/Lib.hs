@@ -6,7 +6,7 @@ import Text.Cipher.Interactive
 
 import Control.Concurrent (threadDelay)
 import Control.Monad
-import Data.List (sortBy)
+import Data.List (isPrefixOf, sortBy, stripPrefix)
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Monoid ((<>))
 import Data.Ord (comparing)
@@ -21,11 +21,11 @@ someFunc = putStrLn "someFunc"
 token = Token $ "bot" <> "252445649:AAH3NQZeVQRvZD-b860REZgvBJ8Jo9M_wPM"
 chatId = 18980945
 
-run previousId =
+run key previousId =
     do manager <- newManager tlsManagerSettings
        result <- pollMessages token manager
        putStrLn "polled"
-       handledMessage <- handleMaybe result (return Nothing) $ \response ->
+       (newKey, handledMessage) <- handleMaybe result (return (key, Nothing)) $ \response ->
            do let messages = mapMaybe message $ update_result response
                   latest = head messages
                   latestId = message_id latest
@@ -35,19 +35,24 @@ run previousId =
                       SendMessageRequest
                       { message_chat_id = T.pack (show chatId)
                       , message_text = T.pack ciphered
-                      , message_reply_to_message_id = Just latestId
+                      , message_reply_to_message_id = Nothing
+                      -- Just latestId
                       , message_parse_mode = Nothing
                       , message_disable_web_page_preview = Nothing
                       , message_disable_notification = Nothing
                       , message_reply_markup = Nothing
                       }
                       -- sendMessageRequest (T.pack $ show chatId) (T.pack ciphered)
-              unless (previousId == Just latestId) $
-                  do void (sendMessage token request manager)
-                     putStrLn $ latestText ++ " -> " ++ ciphered
-              return $ Just latestId
-       run handledMessage
-    where encrypt = fromMaybe "Invalid input, sorry." . playfair "crybaby"
+              if "/setkey" `isPrefixOf` latestText
+              then let newKey = stripPrefix "/setkey " latestText
+                   in do putStrLn $ "Set new key: " ++ show newKey
+                         return (fromMaybe key newKey, Just latestId)
+              else do unless (previousId == Just latestId) $
+                          do void (sendMessage token request manager)
+                             putStrLn $ latestText <> " -> " <> ciphered
+                      return (key, Just latestId)
+       run newKey handledMessage
+    where encrypt = fromMaybe "Invalid input, sorry." . playfair key
 
 
 pollMessages :: Token -> Manager -> IO (Maybe UpdatesResponse)

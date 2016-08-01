@@ -4,4 +4,4 @@ import Control.Monad
 import Lib
 
 main :: IO ()
-main = run Nothing
+main = run "crybaby" Nothing
