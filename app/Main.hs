@@ -1,6 +1,7 @@
 module Main where
 
+import Control.Monad
 import Lib
 
 main :: IO ()
-main = getMeExample
+main = forever run

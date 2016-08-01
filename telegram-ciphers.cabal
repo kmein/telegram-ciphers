@@ -21,6 +21,7 @@ library
                      , http-client
                      , http-client-tls
                      , telegram-api
+                     , text
   default-language:    Haskell2010
 
 executable telegram-ciphers-exe
