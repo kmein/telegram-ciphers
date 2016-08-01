@@ -4,6 +4,7 @@ module Lib where
 import Text.Cipher
 import Text.Cipher.Interactive
 
+import Control.Concurrent (threadDelay)
 import Control.Monad
 import Data.List (sortBy)
 import Data.Maybe (fromMaybe, mapMaybe)
@@ -25,7 +26,7 @@ run previousId =
        result <- pollMessages token manager
        putStrLn "polled"
        handledMessage <- handleMaybe result (return Nothing) $ \response ->
-           do let messages = mapMaybe message $ response
+           do let messages = mapMaybe message $ update_result response
                   latest = head messages
                   latestId = message_id latest
                   latestText = T.unpack $ fromMaybe T.empty $ text latest
