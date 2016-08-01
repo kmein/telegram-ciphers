@@ -3,7 +3,7 @@ packages:
 - '.'
 - location:
     git: https://github.com/kmein/ciphers
-    commit: c9c85d2318130c05fd952993eb52f01daf3c91d1
+    commit: de033ce3b0e9f8d9f289c93267ffada3907fad1e
   extra-dep: true
 extra-deps: []
 
