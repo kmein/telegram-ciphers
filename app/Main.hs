@@ -4,4 +4,4 @@ import Control.Monad
 import Lib
 
 main :: IO ()
-main = forever run
+main = run Nothing
