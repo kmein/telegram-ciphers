@@ -47,7 +47,7 @@ run previousId =
                      putStrLn $ latestText ++ " -> " ++ ciphered
               return $ Just latestId
        run handledMessage
-    where encrypt = fromMaybe [] . playfair "crybaby"
+    where encrypt = fromMaybe "Invalid input, sorry." . playfair "crybaby"
 
 
 pollMessages :: Token -> Manager -> IO (Maybe UpdatesResponse)
