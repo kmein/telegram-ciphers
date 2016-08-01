@@ -6,8 +6,8 @@ import Text.Cipher.Interactive
 
 import Control.Concurrent (threadDelay)
 import Control.Monad
-import Data.List (isPrefixOf, sortBy, stripPrefix)
-import Data.Maybe (fromMaybe, mapMaybe)
+import Data.List (isPrefixOf, nub, sortBy, stripPrefix)
+import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Data.Monoid ((<>))
 import Data.Ord (comparing)
 import qualified Data.Text as T
@@ -16,7 +16,16 @@ import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Web.Telegram.API.Bot
 
 token = Token $ "bot" <> "252445649:AAH3NQZeVQRvZD-b860REZgvBJ8Jo9M_wPM"
-chatId = 18980945
+
+getChatIds :: Token -> IO [Int]
+getChatIds tok =
+    do man <- newManager tlsManagerSettings
+       res <- getUpdates tok Nothing Nothing Nothing man
+       case res of
+         Left e -> fail $ show e
+         Right updates ->
+             return . nub . map (chat_id . chat) $
+             mapMaybe message (update_result updates)
 
 run key previousId =
     do manager <- newManager tlsManagerSettings
@@ -26,11 +35,12 @@ run key previousId =
            do let messages = mapMaybe message $ update_result response
                   latest = head messages
                   latestId = message_id latest
+                  latestChatId = chat_id $ chat latest
                   latestText = T.unpack $ fromMaybe T.empty $ text latest
                   ciphered = processGrouping (Just 4) encrypt latestText
                   request =
                       SendMessageRequest
-                      { message_chat_id = T.pack (show chatId)
+                      { message_chat_id = T.pack (show latestChatId)
                       , message_text = T.pack ciphered
                       , message_reply_to_message_id = Nothing
                       -- Just latestId
@@ -39,7 +49,6 @@ run key previousId =
                       , message_disable_notification = Nothing
                       , message_reply_markup = Nothing
                       }
-                      -- sendMessageRequest (T.pack $ show chatId) (T.pack ciphered)
               if "/setkey" `isPrefixOf` latestText
               then let newKey = stripPrefix "/setkey " latestText
                    in do putStrLn $ "Set new key: " ++ show newKey
