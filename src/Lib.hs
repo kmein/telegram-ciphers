@@ -15,9 +15,6 @@ import Network.HTTP.Client (newManager, Manager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Web.Telegram.API.Bot
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
-
 token = Token $ "bot" <> "252445649:AAH3NQZeVQRvZD-b860REZgvBJ8Jo9M_wPM"
 chatId = 18980945
 
