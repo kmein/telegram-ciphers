@@ -25,7 +25,7 @@ run previousId =
        result <- pollMessages token manager
        putStrLn "polled"
        handledMessage <- handleMaybe result (return Nothing) $ \response ->
-           do let messages = getMessages response
+           do let messages = mapMaybe message $ response
                   latest = head messages
                   latestId = message_id latest
                   latestText = T.unpack $ fromMaybe T.empty $ text latest
@@ -51,13 +51,12 @@ run previousId =
 
 pollMessages :: Token -> Manager -> IO (Maybe UpdatesResponse)
 pollMessages token manager =
-    eitherToMaybe <$> getUpdates token Nothing Nothing (Just 5) manager
+    eitherToMaybe <$> getUpdates token (Just (-1)) (Just 1) Nothing manager
+    -- Just (-1) :: get latest update
+    -- Just 1 :: get only one update
 
 eitherToMaybe :: Either a b -> Maybe b
 eitherToMaybe = const Nothing `either` Just
-
-getMessages :: UpdatesResponse -> [Message]
-getMessages = sortBy (comparing $ negate . date) . mapMaybe message . update_result
 
 handleMaybe :: Maybe a -> b -> (a -> b) -> b
 handleMaybe = flip (flip . maybe)
