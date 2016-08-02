@@ -1,7 +1,6 @@
 module Main where
 
-import Control.Monad
-import Lib
+import Lib (mainLoop, initialOptions)
 
 main :: IO ()
-main = run "crybaby" Nothing
+main = mainLoop initialOptions Nothing
