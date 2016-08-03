@@ -44,13 +44,12 @@ initialOptions = CiphersOptions (Playfair "crybaby") Encrypt (Just 4)
 
 mainLoop :: CiphersOptions -> Maybe Int -> IO ()
 mainLoop opts previousId =
-    handle (\IOError{} -> mainLoop opts previousId) $
     do updateGlobalLogger "telegram-ciphers" (setLevel DEBUG)
        manager <- newManager tlsManagerSettings
        response <- getUpdates token (Just (-1)) (Just 1) Nothing manager
        logDebug "polled (called getUpdates)"
        case response of
-         Left e -> fail $ show e
+         Left _ -> mainLoop opts previousId
          Right response ->
              let messages = mapMaybe message $ update_result response
                  latest = head messages
