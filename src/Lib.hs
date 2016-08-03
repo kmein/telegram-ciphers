@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Lib where
+module Lib (run) where
 
 import Text.Cipher.Interactive
 
