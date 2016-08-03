@@ -28,6 +28,7 @@ import Web.Telegram.API.Bot
 token :: Token
 token = Token $ "bot" <> "252445649:AAH3NQZeVQRvZD-b860REZgvBJ8Jo9M_wPM"
 
+logDebug :: String -> IO ()
 logDebug = debugM "telegram-ciphers"
 
 getChatIds :: Token -> IO [Int]
