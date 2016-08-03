@@ -4,8 +4,8 @@ module Lib where
 
 import Text.Cipher.Interactive
 
-import Control.Exception (SomeException(..), handle)
-import Control.Monad (unless, void, when)
+import Control.Monad
+import Control.Monad.Reader
 
 import Data.Char (toLower)
 import Data.List (nub, sortBy, stripPrefix)
@@ -13,8 +13,6 @@ import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Monoid ((<>))
 import Data.Ord (comparing)
 import qualified Data.Text as T
-
-import GHC.IO.Exception (IOException(..))
 
 import Network.HTTP.Client (newManager, Manager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -25,11 +23,8 @@ import System.Log.Logger
 
 import Web.Telegram.API.Bot
 
-token :: Token
-token = Token $ "bot" <> "252445649:AAH3NQZeVQRvZD-b860REZgvBJ8Jo9M_wPM"
-
-logDebug :: String -> IO ()
-logDebug = debugM "telegram-ciphers"
+logDebug :: (MonadIO m) => String -> m ()
+logDebug = liftIO . debugM "telegram-ciphers"
 
 getChatIds :: Token -> IO [Int]
 getChatIds tok =
@@ -44,11 +39,18 @@ getChatIds tok =
 initialOptions :: CiphersOptions
 initialOptions = CiphersOptions (Playfair "crybaby") Encrypt (Just 4)
 
-mainLoop :: CiphersOptions -> Maybe Int -> IO ()
-mainLoop opts previousId =
-    do updateGlobalLogger "telegram-ciphers" (setLevel DEBUG)
+run :: FilePath -> IO ()
+run tokenPath =
+    do tokenText <- readFile tokenPath
+       let token = Token $ "bot" <> T.pack tokenText
        manager <- newManager tlsManagerSettings
-       response <- getUpdates token (Just (-1)) (Just 1) Nothing manager
+       updateGlobalLogger "telegram-ciphers" $ setLevel DEBUG
+       mainLoop initialOptions Nothing `runReaderT` (manager, token)
+
+mainLoop :: CiphersOptions -> Maybe Int -> ReaderT (Manager, Token) IO ()
+mainLoop opts previousId =
+    do (manager, token) <- ask
+       response <- liftIO $ getUpdates token (Just (-1)) (Just 1) Nothing manager
        case response of
          Left _ ->
              do logDebug "polling failed"
@@ -109,7 +111,7 @@ mainLoop opts previousId =
                                   , message_text = T.pack ciphered
                                   , message_reply_to_message_id = Just latestId
                                   }
-                          void (sendMessage token request manager)
+                          void $ liftIO $ sendMessage token request manager
                           logDebug $ latestText <> " -> " <> ciphered
                    mainLoop opts (Just latestId)
     where encrypt = toFunction opts
