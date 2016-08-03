@@ -5,16 +5,23 @@ import Text.Cipher.Interactive
 
 import Control.Exception (SomeException(..), handle)
 import Control.Monad (unless, void, when)
+
 import Data.Char (toLower)
 import Data.List (nub, sortBy, stripPrefix)
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Monoid ((<>))
 import Data.Ord (comparing)
 import qualified Data.Text as T
+
+import GHC.IO.Exception (IOException(..))
+
 import Network.HTTP.Client (newManager, Manager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
+
 import Safe (readMay)
+
 import System.Log.Logger
+
 import Web.Telegram.API.Bot
 
 token :: Token
@@ -37,7 +44,7 @@ initialOptions = CiphersOptions (Playfair "crybaby") Encrypt (Just 4)
 
 mainLoop :: CiphersOptions -> Maybe Int -> IO ()
 mainLoop opts previousId =
-    handle (\(SomeException _) -> mainLoop opts previousId) $
+    handle (\IOError{} -> mainLoop opts previousId) $
     do updateGlobalLogger "telegram-ciphers" (setLevel DEBUG)
        manager <- newManager tlsManagerSettings
        response <- getUpdates token (Just (-1)) (Just 1) Nothing manager
@@ -100,8 +107,7 @@ mainLoop opts previousId =
                                   SendMessageRequest
                                   { message_chat_id = T.pack (show $ chat_id $ chat latest)
                                   , message_text = T.pack ciphered
-                                  , message_reply_to_message_id = Nothing
-                                  -- Just $ Just latestId
+                                  , message_reply_to_message_id = Just latestId
                                   , message_parse_mode = Nothing
                                   , message_disable_web_page_preview = Nothing
                                   , message_disable_notification = Nothing
