@@ -103,14 +103,10 @@ mainLoop opts previousId =
                    unless (previousId == Just latestId) $
                        do let ciphered = processGrouping (grouped opts) encrypt latestText
                               request =
-                                  SendMessageRequest
+                                  emptyMessage
                                   { message_chat_id = T.pack (show $ chat_id $ chat latest)
                                   , message_text = T.pack ciphered
                                   , message_reply_to_message_id = Just latestId
-                                  , message_parse_mode = Nothing
-                                  , message_disable_web_page_preview = Nothing
-                                  , message_disable_notification = Nothing
-                                  , message_reply_markup = Nothing
                                   }
                           void (sendMessage token request manager)
                           logDebug $ latestText <> " -> " <> ciphered
@@ -120,3 +116,15 @@ mainLoop opts previousId =
 handleCommand :: (Monad m) => String -> String -> ([String] -> m a) -> m ()
 handleCommand text cmd argf = mapM_ argf arg
     where arg = (words . map toLower) <$> stripPrefix cmd text
+
+emptyMessage :: SendMessageRequest
+emptyMessage =
+    SendMessageRequest
+    { message_chat_id = T.empty
+    , message_text = T.empty
+    , message_reply_to_message_id = Nothing
+    , message_parse_mode = Nothing
+    , message_disable_web_page_preview = Nothing
+    , message_disable_notification = Nothing
+    , message_reply_markup = Nothing
+    }
