@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Lib where
 
@@ -57,51 +58,48 @@ mainLoop opts previousId =
                  latestId = message_id latest
                  latestText = T.unpack $ fromMaybe T.empty $ text latest
              in do logDebug "polled (called getUpdates)"
-                   handleCommand latestText "/setcipher" $ \args ->
-                       case args of
-                         ["atbash"] ->
-                             do logDebug "changed cipher to atbash"
-                                mainLoop opts { cipher = Atbash } Nothing
-                         ["autokey", key] ->
-                             do logDebug "changed cipher to autokey"
-                                mainLoop opts { cipher = Autokey key } Nothing
-                         ["caesar", shift] | Just n <- readMay shift ->
-                             do logDebug "changed cipher to caesar"
-                                mainLoop opts { cipher = Caesar n } Nothing
-                         ["polybius"] ->
-                             do logDebug "changed cipher to polybius"
-                                mainLoop opts { cipher = Polybius } Nothing
-                         ["playfair", key] ->
-                             do logDebug "changed cipher to playfair"
-                                mainLoop opts { cipher = Playfair key } Nothing
-                         ["scytale", shift] | Just n <- readMay shift ->
-                             do logDebug "changed cipher to scytale"
-                                mainLoop opts { cipher = Scytale n } Nothing
-                         ["substitution", key] ->
-                             do logDebug "changed cipher to substitution"
-                                mainLoop opts { cipher = Substitution key } Nothing
-                         ["vigenere", key] ->
-                             do logDebug "changed cipher to vigenere"
-                                mainLoop opts { cipher = Vigenere key } Nothing
-                         _ -> mainLoop opts previousId
-                   handleCommand latestText "/setdirection" $ \args ->
-                       case args of
-                         ["encrypt"] ->
-                             do logDebug "changed direction to encrypt"
-                                mainLoop opts { direction = Encrypt } Nothing
-                         ["decrypt"] ->
-                             do logDebug "changed direction to decrypt"
-                                mainLoop opts { direction = Decrypt } Nothing
-                         _ -> mainLoop opts previousId
-                   handleCommand latestText "/setgrouping" $ \args ->
-                       case args of
-                          [] ->
-                              do logDebug "disabled grouping"
-                                 mainLoop opts { grouped = Nothing } Nothing
-                          [g] | Just n <- readMay g ->
-                              do logDebug $ "set grouping to " <> g
-                                 mainLoop opts { grouped = Just n } Nothing
-                          _ -> mainLoop opts $ Just latestId
+                   handleCommand latestText "/setcipher" $ \case
+                       ["atbash"] ->
+                           do logDebug "changed cipher to atbash"
+                              mainLoop opts { cipher = Atbash } Nothing
+                       ["autokey", key] ->
+                           do logDebug "changed cipher to autokey"
+                              mainLoop opts { cipher = Autokey key } Nothing
+                       ["caesar", shift] | Just n <- readMay shift ->
+                           do logDebug "changed cipher to caesar"
+                              mainLoop opts { cipher = Caesar n } Nothing
+                       ["polybius"] ->
+                           do logDebug "changed cipher to polybius"
+                              mainLoop opts { cipher = Polybius } Nothing
+                       ["playfair", key] ->
+                           do logDebug "changed cipher to playfair"
+                              mainLoop opts { cipher = Playfair key } Nothing
+                       ["scytale", shift] | Just n <- readMay shift ->
+                           do logDebug "changed cipher to scytale"
+                              mainLoop opts { cipher = Scytale n } Nothing
+                       ["substitution", key] ->
+                           do logDebug "changed cipher to substitution"
+                              mainLoop opts { cipher = Substitution key } Nothing
+                       ["vigenere", key] ->
+                           do logDebug "changed cipher to vigenere"
+                              mainLoop opts { cipher = Vigenere key } Nothing
+                       _ -> mainLoop opts previousId
+                   handleCommand latestText "/setdirection" $ \case
+                       ["encrypt"] ->
+                           do logDebug "changed direction to encrypt"
+                              mainLoop opts { direction = Encrypt } Nothing
+                       ["decrypt"] ->
+                           do logDebug "changed direction to decrypt"
+                              mainLoop opts { direction = Decrypt } Nothing
+                       _ -> mainLoop opts previousId
+                   handleCommand latestText "/setgrouping" $ \case
+                       [] ->
+                           do logDebug "disabled grouping"
+                              mainLoop opts { grouped = Nothing } Nothing
+                       [g] | Just n <- readMay g ->
+                           do logDebug $ "set grouping to " <> g
+                              mainLoop opts { grouped = Just n } Nothing
+                       _ -> mainLoop opts $ Just latestId
                    unless (previousId == Just latestId) $
                        do let ciphered = processGrouping (grouped opts) encrypt latestText
                               request =
