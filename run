@@ -1,2 +1,2 @@
 #!/bin/sh
-stack exec telegram-ciphers-exe -- CiphersBot
+stack exec telegram-ciphers-exe -- .token
