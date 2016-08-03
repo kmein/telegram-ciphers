@@ -47,15 +47,17 @@ mainLoop opts previousId =
     do updateGlobalLogger "telegram-ciphers" (setLevel DEBUG)
        manager <- newManager tlsManagerSettings
        response <- getUpdates token (Just (-1)) (Just 1) Nothing manager
-       logDebug "polled (called getUpdates)"
        case response of
-         Left _ -> mainLoop opts previousId
+         Left _ ->
+             do logDebug "polling failed"
+                mainLoop opts previousId
          Right response ->
              let messages = mapMaybe message $ update_result response
                  latest = head messages
                  latestId = message_id latest
                  latestText = T.unpack $ fromMaybe T.empty $ text latest
-             in do handleCommand latestText "/setcipher" $ \args ->
+             in do logDebug "polled (called getUpdates)"
+                   handleCommand latestText "/setcipher" $ \args ->
                        case args of
                          ["atbash"] ->
                              do logDebug "changed cipher to atbash"
