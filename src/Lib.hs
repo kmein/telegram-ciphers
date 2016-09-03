@@ -39,10 +39,9 @@ getChatIds tok =
 initialOptions :: CiphersOptions
 initialOptions = CiphersOptions (Playfair "crybaby") Encrypt (Just 4)
 
-run :: FilePath -> IO ()
-run tokenPath =
-    do tokenText <- readFile tokenPath
-       let token = Token $ "bot" <> T.pack tokenText
+run :: T.Text -> IO ()
+run tokenText =
+    do let token = Token $ "bot" <> tokenText
        manager <- newManager tlsManagerSettings
        updateGlobalLogger "telegram-ciphers" $ setLevel DEBUG
        mainLoop initialOptions Nothing `runReaderT` (manager, token)
@@ -52,7 +51,7 @@ mainLoop opts previousId =
     do (manager, token) <- ask
        response <- liftIO $ getUpdates token (Just (-1)) (Just 1) Nothing manager
        case response of
-         Left _ ->
+         Left e ->
              do logDebug "polling failed"
                 mainLoop opts previousId
          Right response ->
